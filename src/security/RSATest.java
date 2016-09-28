@@ -20,65 +20,72 @@ public class RSATest
    {
       try
       {
-         if (args[0].equals("-genkey")) {
-            KeyPairGenerator pairgen = KeyPairGenerator.getInstance("RSA");
-            SecureRandom random = new SecureRandom();
-            pairgen.initialize(KEYSIZE, random);
-            KeyPair keyPair = pairgen.generateKeyPair();
-            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(args[1]));
-            out.writeObject(keyPair.getPublic());
-            out.close();
-            out = new ObjectOutputStream(new FileOutputStream(args[2]));
-            out.writeObject(keyPair.getPrivate());
-            out.close();
-         } else if (args[0].equals("-encrypt")) {
-            KeyGenerator keygen = KeyGenerator.getInstance("AES");
-            SecureRandom random = new SecureRandom();
-            keygen.init(random);
-            SecretKey key = keygen.generateKey();
+          switch (args[0]) {
+              case "-genkey": {
+                  KeyPairGenerator pairgen = KeyPairGenerator.getInstance("RSA");
+                  SecureRandom random = new SecureRandom();
+                  pairgen.initialize(KEYSIZE, random);
+                  KeyPair keyPair = pairgen.generateKeyPair();
+                  ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(args[1]));
+                  out.writeObject(keyPair.getPublic());
+                  out.close();
+                  out = new ObjectOutputStream(new FileOutputStream(args[2]));
+                  out.writeObject(keyPair.getPrivate());
+                  out.close();
+                  break;
+              }
+              case "-encrypt": {
+                  KeyGenerator keygen = KeyGenerator.getInstance("AES");
+                  SecureRandom random = new SecureRandom();
+                  keygen.init(random);
+                  SecretKey key = keygen.generateKey();
 
-            // wrap with RSA public key
-            ObjectInputStream keyIn = new ObjectInputStream(new FileInputStream(args[3]));
-            Key publicKey = (Key) keyIn.readObject();
-            keyIn.close();
+                  // wrap with RSA public key
+                  ObjectInputStream keyIn = new ObjectInputStream(new FileInputStream(args[3]));
+                  Key publicKey = (Key) keyIn.readObject();
+                  keyIn.close();
 
-            Cipher cipher = Cipher.getInstance("RSA");
-            cipher.init(Cipher.WRAP_MODE, publicKey);
-            byte[] wrappedKey = cipher.wrap(key);
-            
-            DataOutputStream out = new DataOutputStream(new FileOutputStream(args[2]));
-            out.writeInt(wrappedKey.length);
-            out.write(wrappedKey);
+                  Cipher cipher = Cipher.getInstance("RSA");
+                  cipher.init(Cipher.WRAP_MODE, publicKey);
+                  byte[] wrappedKey = cipher.wrap(key);
 
-            InputStream in = new FileInputStream(args[1]);
-            cipher = Cipher.getInstance("AES");
-            cipher.init(Cipher.ENCRYPT_MODE, key);
-            crypt(in, out, cipher);
-            in.close();
-            out.close();
-         } else {
-            DataInputStream in = new DataInputStream(new FileInputStream(args[1]));
-            int length = in.readInt();
-            byte[] wrappedKey = new byte[length];
-            in.read(wrappedKey, 0, length);
+                  DataOutputStream out = new DataOutputStream(new FileOutputStream(args[2]));
+                  out.writeInt(wrappedKey.length);
+                  out.write(wrappedKey);
 
-            // unwrap with RSA private key
-            ObjectInputStream keyIn = new ObjectInputStream(new FileInputStream(args[3]));
-            Key privateKey = (Key) keyIn.readObject();
-            keyIn.close();
+                  InputStream in = new FileInputStream(args[1]);
+                  cipher = Cipher.getInstance("AES");
+                  cipher.init(Cipher.ENCRYPT_MODE, key);
+                  crypt(in, out, cipher);
+                  in.close();
+                  out.close();
+                  break;
+              }
+              default: {
+                  DataInputStream in = new DataInputStream(new FileInputStream(args[1]));
+                  int length = in.readInt();
+                  byte[] wrappedKey = new byte[length];
+                  in.read(wrappedKey, 0, length);
 
-            Cipher cipher = Cipher.getInstance("RSA");
-            cipher.init(Cipher.UNWRAP_MODE, privateKey);
-            Key key = cipher.unwrap(wrappedKey, "AES", Cipher.SECRET_KEY);
+                  // unwrap with RSA private key
+                  ObjectInputStream keyIn = new ObjectInputStream(new FileInputStream(args[3]));
+                  Key privateKey = (Key) keyIn.readObject();
+                  keyIn.close();
 
-            OutputStream out = new FileOutputStream(args[2]);
-            cipher = Cipher.getInstance("AES");
-            cipher.init(Cipher.DECRYPT_MODE, key);
+                  Cipher cipher = Cipher.getInstance("RSA");
+                  cipher.init(Cipher.UNWRAP_MODE, privateKey);
+                  Key key = cipher.unwrap(wrappedKey, "AES", Cipher.SECRET_KEY);
 
-            crypt(in, out, cipher);
-            in.close();
-            out.close();
-         }
+                  OutputStream out = new FileOutputStream(args[2]);
+                  cipher = Cipher.getInstance("AES");
+                  cipher.init(Cipher.DECRYPT_MODE, key);
+
+                  crypt(in, out, cipher);
+                  in.close();
+                  out.close();
+                  break;
+              }
+          }
       } catch (IOException e) {
          e.printStackTrace();
       } catch (GeneralSecurityException e) {
