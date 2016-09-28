@@ -1,8 +1,10 @@
 package security;
 
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import java.io.*;
 import java.security.*;
-import javax.crypto.*;
 
 /**
  * This program tests the RSA cipher. Usage:<br>
@@ -18,8 +20,7 @@ public class RSATest
    {
       try
       {
-         if (args[0].equals("-genkey"))
-         {
+         if (args[0].equals("-genkey")) {
             KeyPairGenerator pairgen = KeyPairGenerator.getInstance("RSA");
             SecureRandom random = new SecureRandom();
             pairgen.initialize(KEYSIZE, random);
@@ -30,9 +31,7 @@ public class RSATest
             out = new ObjectOutputStream(new FileOutputStream(args[2]));
             out.writeObject(keyPair.getPrivate());
             out.close();
-         }
-         else if (args[0].equals("-encrypt"))
-         {
+         } else if (args[0].equals("-encrypt")) {
             KeyGenerator keygen = KeyGenerator.getInstance("AES");
             SecureRandom random = new SecureRandom();
             keygen.init(random);
@@ -57,9 +56,7 @@ public class RSATest
             crypt(in, out, cipher);
             in.close();
             out.close();
-         }
-         else
-         {
+         } else {
             DataInputStream in = new DataInputStream(new FileInputStream(args[1]));
             int length = in.readInt();
             byte[] wrappedKey = new byte[length];
@@ -82,17 +79,11 @@ public class RSATest
             in.close();
             out.close();
          }
-      }
-      catch (IOException e)
-      {
+      } catch (IOException e) {
          e.printStackTrace();
-      }
-      catch (GeneralSecurityException e)
-      {
+      } catch (GeneralSecurityException e) {
          e.printStackTrace();
-      }
-      catch (ClassNotFoundException e)
-      {
+      } catch (ClassNotFoundException e) {
          e.printStackTrace();
       }
    }
@@ -115,11 +106,9 @@ public class RSATest
       int inLength = 0;
       ;
       boolean more = true;
-      while (more)
-      {
+      while (more) {
          inLength = in.read(inBytes);
-         if (inLength == blockSize)
-         {
+         if (inLength == blockSize) {
             int outLength = cipher.update(inBytes, 0, blockSize, outBytes);
             out.write(outBytes, 0, outLength);
          }
